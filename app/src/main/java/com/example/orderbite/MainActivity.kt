@@ -22,21 +22,29 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Face
+import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.ShoppingCart
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedTextField
@@ -58,6 +66,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -102,8 +111,6 @@ data class NavItemState(
     val title : String,
     val selectedIcon : ImageVector,
     val unselectedIcon : ImageVector,
-    val hasBadge : Boolean,
-    val badgeNum : Int
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -114,17 +121,13 @@ fun MyApp(modifier: Modifier = Modifier, viewModel: OrderViewModel = remember { 
     val items = listOf(
         NavItemState(
             title = "Precel",
-            selectedIcon = Icons.Filled.Home,
-            unselectedIcon = Icons.Outlined.Home,
-            hasBadge = false,
-            badgeNum = 0
+            selectedIcon = Icons.Filled.Star,
+            unselectedIcon = Icons.Outlined.Star,
         ),
         NavItemState(
             title = "Pizza",
-            selectedIcon = Icons.Filled.Face,
-            unselectedIcon = Icons.Outlined.Face,
-            hasBadge = true,
-            badgeNum = 10
+            selectedIcon = Icons.Filled.Favorite,
+            unselectedIcon = Icons.Outlined.Favorite,
         ),
     )
 
@@ -206,18 +209,11 @@ fun MyApp(modifier: Modifier = Modifier, viewModel: OrderViewModel = remember { 
                                     }
                                 },
                                 icon = {
-                                    BadgedBox(badge = {
-                                        if (item.hasBadge) Badge {}
-                                        if (item.badgeNum != 0) Badge {
-                                            Text(text = item.badgeNum.toString())
-                                        }
-                                    }) {
-                                        Icon(
-                                            imageVector = if (bottomNavState == index) item.selectedIcon
-                                            else item.unselectedIcon,
-                                            contentDescription = item.title
-                                        )
-                                    }
+                                    Icon(
+                                        imageVector = if (bottomNavState == index) item.selectedIcon
+                                        else item.unselectedIcon,
+                                        contentDescription = item.title
+                                    )
                                 },
                                 label = {
                                     Text(text = item.title)
@@ -281,12 +277,11 @@ fun MyApp(modifier: Modifier = Modifier, viewModel: OrderViewModel = remember { 
 fun PizzaItem(pizzaName: String, viewModel: OrderViewModel) {
     var orderedQuantity by remember { mutableStateOf(viewModel.getOrderedQuantity(pizzaName)) }
 
-
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .padding(16.dp) // Dodajemy odstęp do całego kontenera
+            .padding(16.dp)
     ) {
         Text(
             text = pizzaName,
@@ -320,30 +315,29 @@ fun PizzaItem(pizzaName: String, viewModel: OrderViewModel) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                IconButton(
+                CircularIconButton(
                     onClick = {
                         orderedQuantity = maxOf(orderedQuantity - 1, 0)
                         viewModel.setOrderedQuantity(pizzaName, orderedQuantity)
                     },
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Text(text = "-")
-                }
+                    modifier = Modifier.size(32.dp),
+                    icon = { Text(text = "-") }
+                )
 
-                Text(text = orderedQuantity.toString(), fontSize = 18.sp)
+                Text(text = orderedQuantity.toString(), fontSize = 22.sp,
+                    modifier = Modifier.padding(horizontal = 10.dp))
 
-                IconButton(
+                CircularIconButton(
                     onClick = {
                         orderedQuantity++
                         viewModel.setOrderedQuantity(pizzaName, orderedQuantity)
                     },
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Text(text = "+")
-                }
+                    modifier = Modifier.size(32.dp),
+                    icon = { Text(text = "+") }
+                )
             }
         }
-        Spacer(modifier = Modifier.height(16.dp)) // Dodajemy odstęp między opisem a krawędzią
+        Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = getOpisPizza(pizzaName),
             textAlign = TextAlign.Justify,
@@ -360,7 +354,7 @@ fun PretzelItem(pretzelName: String, viewModel: OrderViewModel) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .padding(16.dp) // Dodajemy odstęp do całego kontenera
+            .padding(16.dp)
     ) {
         Text(
             text = pretzelName,
@@ -394,35 +388,49 @@ fun PretzelItem(pretzelName: String, viewModel: OrderViewModel) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                IconButton(
+                CircularIconButton(
                     onClick = {
                         orderedQuantity = maxOf(orderedQuantity - 1, 0)
                         viewModel.setOrderedQuantity(pretzelName, orderedQuantity)
                     },
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Text(text = "-")
-                }
+                    modifier = Modifier.size(32.dp),
+                    icon = { Text(text = "-") }
+                )
 
-                Text(text = orderedQuantity.toString(), fontSize = 18.sp)
+                Text(text = orderedQuantity.toString(), fontSize = 22.sp,
+                        modifier = Modifier.padding(horizontal = 10.dp))
 
-                IconButton(
+                CircularIconButton(
                     onClick = {
                         orderedQuantity++
                         viewModel.setOrderedQuantity(pretzelName, orderedQuantity)
                     },
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Text(text = "+")
-                }
+                    modifier = Modifier.size(32.dp),
+                    icon = { Text(text = "+") }
+                )
             }
         }
-        Spacer(modifier = Modifier.height(16.dp)) // Dodajemy odstęp między opisem a krawędzią
+        Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = getOpisPrecel(pretzelName),
             textAlign = TextAlign.Justify,
             fontSize = 16.sp
         )
+    }
+}
+
+@Composable
+fun CircularIconButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    icon: @Composable () -> Unit
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = modifier
+            .background(color = Color(0xFFE0A9A5), shape = CircleShape)
+    ) {
+        icon()
     }
 }
 
@@ -439,8 +447,9 @@ fun ShopScreen(navController: NavController, viewModel: OrderViewModel) {
     val orderedItems = viewModel.orderedQuantities.filterValues { it > 0 }
 
     // Nowe pole tekstowe dla adresu
-    var address by rememberSaveable { mutableStateOf("") }
-    var showAddressWarning by remember { mutableStateOf(false) }
+    var table by rememberSaveable { mutableStateOf("") }
+    var showTableWarning by remember { mutableStateOf(false) }
+    var orderComments by rememberSaveable { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -453,6 +462,12 @@ fun ShopScreen(navController: NavController, viewModel: OrderViewModel) {
                         Text(text = "Zamówienie")
                     }
                 },
+                modifier = Modifier
+                    .padding(10.dp)
+                    .clip(RoundedCornerShape(20.dp)),
+                colors = topAppBarColors(
+                    containerColor = Color(0xFFE0A9A5)
+                ),
                 navigationIcon = {
                     IconButton(onClick = {
                         navController.navigateUp()
@@ -489,85 +504,110 @@ fun ShopScreen(navController: NavController, viewModel: OrderViewModel) {
                         )
                     }
 
-                    items(orderedItems.entries.toList()) { (itemName, quantity) ->
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
+                    if (orderedItems.isEmpty()) {
+                        item {
                             Text(
-                                text = "$itemName $quantity",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center
-                            )
-                            Box(
+                                text = "Brak zamówień",
+                                color = Color.Gray,
+                                textAlign = TextAlign.Center,
                                 modifier = Modifier
-                                    .size(120.dp)
-                                    .background(color = Color.White),
-                                contentAlignment = Alignment.Center
+                                    .fillMaxWidth()
+                                    .padding(vertical = 20.dp)
+                            )
+                        }
+                    } else {
+                        items(orderedItems.entries.toList()) { (itemName, quantity) ->
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                val imageName = itemName.replace(" ", "").lowercase()
-                                val imagePainter = rememberImagePainter(
-                                    data = getResourceIdByName(imageName, context = LocalContext.current)
+                                Text(
+                                    text = "$itemName $quantity",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center
                                 )
-                                Image(
-                                    painter = imagePainter,
-                                    contentDescription = null,
+                                Box(
                                     modifier = Modifier
-                                        .fillMaxSize()
-                                        .clip(RoundedCornerShape(8.dp))
-                                )
+                                        .size(120.dp)
+                                        .background(color = Color.White),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    val imageName = itemName.replace(" ", "").lowercase()
+                                    val imagePainter = rememberImagePainter(
+                                        data = getResourceIdByName(
+                                            imageName,
+                                            context = LocalContext.current
+                                        )
+                                    )
+                                    Image(
+                                        painter = imagePainter,
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clip(RoundedCornerShape(8.dp))
+                                    )
+                                }
                             }
                         }
                     }
+
                     item {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Icon(
-                                imageVector = Icons.Outlined.LocationOn,
-                                contentDescription = "Location",
-                                modifier = Modifier.size(24.dp)
-                            )
                             OutlinedTextField(
-                                value = address,
+                                value = table,
                                 onValueChange = {
-                                    address = it
-                                    showAddressWarning = false
+                                    table = it.filter { it.isDigit() }
+                                    showTableWarning = false
                                 },
-                                label = { Text("Adres dostawy") },
+                                label = { Text("Numer stolika") },
+                                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(16.dp)
                             )
                         }
                     }
+                    item {
+                        OutlinedTextField(
+                            value = orderComments,
+                            onValueChange = {
+                                orderComments = it
+                            },
+                            label = { Text("Uwagi do zamówienia") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        )
+                    }
 
-                    // Dodany przycisk "Zamów"
                     item {
                         Button(
                             onClick = {
-                                if (address.isBlank()) {
-                                    showAddressWarning = true
-                                } else {
+                                if (table.isBlank() && orderedItems.isNotEmpty()) {
+                                    showTableWarning = true
+                                } else if (table.isNotBlank()) {
                                     navController.navigate("PreparationTimeScreen")
                                 }
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp)
+                                .padding(16.dp),
+                            colors = ButtonDefaults.buttonColors(Color(0xFFE0A9A5)),
+                            enabled = orderedItems.isNotEmpty()
                         ) {
-                            Text(text = "Zamów")
+                            Text(text = "Zamów", color = Color.White)
                         }
                     }
 
-                    // Warning for missing address
-                    if (showAddressWarning) {
+                    if (showTableWarning) {
                         item {
                             Text(
-                                text = "Adres dostawy jest wymagany!",
+                                text = "Podaj numer stolika, do którego ma być doniesione zamówienie!",
                                 color = Color.Red,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier
@@ -581,6 +621,7 @@ fun ShopScreen(navController: NavController, viewModel: OrderViewModel) {
         }
     )
 }
+
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -604,7 +645,6 @@ fun PreparationTimeScreen(
             }
 
             override fun onFinish() {
-                // Handle countdown finish, e.g., navigate to the next screen
                 navController.navigate("NextScreen")
             }
         }
@@ -623,9 +663,15 @@ fun PreparationTimeScreen(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = "Gotowe do odbioru")
+                        Text(text = "Odbiór")
                     }
                 },
+                modifier = Modifier
+                    .padding(10.dp)
+                    .clip(RoundedCornerShape(20.dp)),
+                colors = topAppBarColors(
+                    containerColor = Color(0xFFE0A9A5)
+                ),
                 navigationIcon = {
                     IconButton(onClick = {
                         navController.popBackStack()
@@ -649,7 +695,7 @@ fun PreparationTimeScreen(
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
-                        color = Color.Green // Customize the color as needed
+                        color = Color.Green
                     )
                 } else {
                     Text(
@@ -657,7 +703,7 @@ fun PreparationTimeScreen(
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
-                        color = Color.Green // Customize the color as needed
+                        color = Color.Green
                     )
                 }
             }
